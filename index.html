@@ -1,0 +1,138 @@
+<head>
+  <script type="text/javascript">
+    var mat =  require('materialize-css');
+
+    function getDarkSkyWeather() {
+      // for testing 
+      // only for right now, addressString should be taken as parameter
+      var darkSkyApiKey = '21e7d440c2a31cfb2fca848d35caf927';
+      var darkSkyUrlPathHeader = `https://api.darksky.net/forecast/${darkSkyApiKey}/`;
+      var googleGeocodeApiKey = '&key=AIzaSyACpDnJsp7wQjuNs0Ig4SMCbUJvysmhiII';
+      var googleGeocodePathHeader = `https://maps.googleapis.com/maps/api/geocode/json?address=`;
+      
+      let addressString = 'auburn, al';
+      addressString = addressString.replace(/\s/g, '+');
+      //api key and path header available
+      let addressLatLongDict = {};
+      let requestUrl = googleGeocodePathHeader + addressString + googleGeocodeApiKey;
+      // debug 
+      console.log(requestUrl);
+      fetch(requestUrl).then(function(body) {
+        if(body.ok) {
+          return body.json();
+        }
+        else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(function(bodyObj) {
+          let address = bodyObj.results[0].formatted_address;
+          let lat = bodyObj.results[0].geometry.location.lat;
+          let long = bodyObj.results[0].geometry.location.lng;
+          addressLatLongDict = {'address': address, 'lat': lat.toString(), 'long': long.toString()};
+          return darkSkyUrlPathHeader + addressLatLongDict['lat'] + ',' + addressLatLongDict['long'];
+      }).then(function(requestUrl) {
+        console.log(requestUrl);
+        fetch(requestUrl).then(function(body) {
+          return body.json();
+        }).then(function(bodyObj) {
+          let currentlySummary = bodyObj.currently.summary;
+          let minutelySummary = bodyObj.minutely.summary;
+          let hourlySummary = bodyObj.hourly.summary;
+          let dailySummary = bodyObj.daily.summary;
+          let weatherInfo = `Address: ${addressLatLongDict['address']}\n`;
+          weatherInfo += 'Currently: ' + bodyObj.currently.temperature + '\n';
+          // weatherInfo += currentlySummary + '\n';
+          weatherInfo += minutelySummary + '\n';
+          weatherInfo += hourlySummary + '\n';
+          weatherInfo += dailySummary + '\n';
+          document.getElementById('todaySummary').innerHTML = weatherInfo;
+          // data has data, summary, and icon
+          // list through week
+          writeForecastAndTemp(bodyObj, 0, 'todayForecast', 'toDayTemp');
+          writeForecastAndTemp(bodyObj, 1, 'oneDayForecast', 'oneDayTemp');
+          writeForecastAndTemp(bodyObj, 2, 'twoDayForecast', 'twoDayTemp');
+          writeForecastAndTemp(bodyObj, 3, 'threeDayForecast', 'threeDayTemp');
+          writeForecastAndTemp(bodyObj, 4, 'fourDayForecast', 'fourDayTemp');
+          writeForecastAndTemp(bodyObj, 5, 'fiveDayForecast', 'fiveDayTemp');
+          // for (let daysFromNow = 0; daysFromNow < 6; daysFromNow++) {
+          //   writeForecastAndTemp(bodyObj, daysFromNow, 'todayForecast', 'toDayTemp');
+          // }
+          // finished listing 
+          
+          return weatherInfo;
+        })
+            
+      }).catch(function(error) {
+        console.log('There has been a problem with your fetch operation: ', error.message);
+      });
+    } 
+
+    function writeForecastAndTemp(bodyObj, daysFromNow, forecastId, dayId) {
+      let todayForecastSummary = bodyObj.daily.data[daysFromNow].summary;
+      let todayForecastLow = bodyObj.daily.data[daysFromNow].temperatureLow;
+      let todayForecastHigh = bodyObj.daily.data[daysFromNow].temperatureHigh;
+      document.getElementById(forecastId).innerHTML = todayForecastSummary;
+      document.getElementById(dayId).innerHTML = `High: ${todayForecastHigh}\nLow: ${todayForecastLow}`;
+
+    }
+
+
+  </script>
+
+  <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+
+     <!-- CSS -->
+    <style type="text/css">
+    </style>
+            
+</head>
+
+<body>
+  <div class="container">
+    <div class="row weather-row">
+      <!--weather-->
+      <div class='col s12'>
+        <h4 class="center">Weather Forecast</h4>
+        <h5 id='todaySummary' class="center">todaySummary</h5>
+      </div>
+      <div class='col s2'>
+        <p><strong>Today</strong></p>
+        <p id='todayForecast'>todayForecast</p>
+        <p id='toDayTemp'>toDayTemp</p>
+      </div>
+      <div class='col s2'>
+        <p><strong>Tomorrow</strong></p>
+        <p id='oneDayForecast'>oneDayForecast</p>
+        <p id='oneDayTemp'>oneDayTemp</p>
+      </div>
+      <div class='col s2'>
+        <p><strong>2 Days</strong></p>
+        <p id='twoDayForecast'>twoDayForecast</p>
+        <p id='twoDayTemp'>twoDayTemp</p>
+      </div>
+      <div class='col s2'>
+        <p><strong>3 Days</strong></p>
+        <p id='threeDayForecast'>threeDayForecast</p>
+        <p id='threeDayTemp'>threeDayTemp</p>
+      </div>
+      <div class='col s2'>
+        <p><strong>4 Days</strong></p>
+        <p id='fourDayForecast'>fourDayForecast</p>
+        <p id='fourDayTemp'>fourDayTemp</p>
+      </div>
+      <div class='col s2'>
+        <p><strong>5 Days</strong></p>
+        <p id='fiveDayForecast'>fiveDayForecast</p>
+        <p id='fiveDayTemp'>fiveDayTemp</p>
+      </div>
+    </div>
+  </div>
+  </body>
+
+<script>
+  getDarkSkyWeather();
+</script>
